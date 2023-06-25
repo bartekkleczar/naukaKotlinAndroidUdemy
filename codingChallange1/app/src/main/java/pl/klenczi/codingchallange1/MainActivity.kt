@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
             ){
                 Button(onClick = {
                     CoroutineScope(Dispatchers.Main).launch{
-                        Log.i("Main", "Thread [Main]: ${Thread.currentThread().name}")
+                        Log.i("Mai", "Thread [Main]: ${Thread.currentThread().name}")
 
                     }
                 }) {
