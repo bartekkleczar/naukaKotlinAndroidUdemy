@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,10 +31,26 @@ class MainActivity : ComponentActivity() {
             var count by remember {
                 mutableStateOf(0)
             }
+            var userMessageText by remember {
+                mutableStateOf("")
+            }
+            suspend fun downloadUserData() {
+                for (i in 1..200000) {
+                    withContext(Dispatchers.Main){
+                        userMessageText = "Downloading user $i in ${Thread.currentThread().name}"
+                    }
+                }
+            }
             Column(
                 Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    text = userMessageText,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(top = 70.dp)
+                )
                 Button(
                     onClick = {
                         CoroutineScope(Dispatchers.IO).launch {
@@ -43,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .height(110.dp)
-                        .padding(top = 50.dp)
+                        .padding(top = 20.dp)
                 ) {
                     Text(
                         text = "DOWNLOAD USER DATA",
@@ -74,11 +91,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-private fun downloadUserData() {
-    for (i in 1..200000) {
-        Log.i("Main", "Downloading user $i in ${Thread.currentThread().name}")
     }
 }
