@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pl.klenczi.asyncandawait.ui.theme.AsyncAndAwaitTheme
@@ -22,9 +23,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         CoroutineScope(Dispatchers.IO).launch {
             Log.i("Main", "--Calculation started...")
-            val stock1 = getStock1()
-            val stock2 = getStock2()
-            val total = stock1 + stock2
+            val stock1 = async { getStock1() }
+            val stock2 = async { getStock2() }
+            val total = stock1.await() + stock2.await()
             Log.i("Main", "--total: $total")
         }
         setContent {}
