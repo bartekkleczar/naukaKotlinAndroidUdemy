@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 Button(
                     onClick = {
                         CoroutineScope(Dispatchers.IO).launch {
-                            downloadUserData()
+                            count = UserDataManager1().getTotalUserCount()
                         }
                     },
                     modifier = Modifier
