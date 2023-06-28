@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 Button(
                     onClick = {
                         CoroutineScope(Dispatchers.IO).launch {
-                            count = UserDataManager1().getTotalUserCount()
+                            count = UserDataManager2().getTotalUserCount()
                         }
                     },
                     modifier = Modifier
