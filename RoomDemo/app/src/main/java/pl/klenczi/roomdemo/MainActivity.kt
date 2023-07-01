@@ -1,6 +1,7 @@
 package pl.klenczi.roomdemo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -33,15 +34,27 @@ import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import pl.klenczi.roomdemo.db.Subscriber
+import pl.klenczi.roomdemo.db.SubscriberDao
+import pl.klenczi.roomdemo.db.SubscriberDatabase
+import pl.klenczi.roomdemo.db.SubscriberRepository
 import pl.klenczi.roomdemo.ui.theme.RoomDemoTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var subscriberViewModel: SubscriberViewModel
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val textStateName = remember { mutableStateOf(TextFieldValue()) }
-            val textStateEmail = remember { mutableStateOf(TextFieldValue()) }
+            val dao = SubscriberDatabase.getInstance(application).subscriberDao
+            val repository = SubscriberRepository(dao)
+            val factory = SubscriberViewModelFactory(repository)
+            subscriberViewModel = ViewModelProvider(this, factory)[SubscriberViewModel::class.java]
+            displaySubscribersList()
+            var textStateName by remember { mutableStateOf("") }
+            var textStateEmail by remember { mutableStateOf("") }
 
             Column(
                 modifier = Modifier
@@ -50,14 +63,14 @@ class MainActivity : ComponentActivity() {
             ) {
                 val pad = 20.dp
                 TextField(
-                    value = textStateName.value, onValueChange = { textStateName.value = it },
+                    value = textStateName, onValueChange = { textStateName = it },
                     label = { Text(text = "Subscriber's Name") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = pad)
                 )
                 TextField(
-                    value = textStateEmail.value, onValueChange = { textStateEmail.value = it },
+                    value = textStateEmail, onValueChange = { textStateEmail = it },
                     label = { Text(text = "Subscriber's Email") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -70,13 +83,17 @@ class MainActivity : ComponentActivity() {
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
                         modifier = Modifier.background(Color.Transparent, shape = RoundedCornerShape(5.dp)),
-                        onClick = { /*TODO*/ }) {
+                        onClick = {
+                            subscriberViewModel.insert(Subscriber(0, textStateName, textStateEmail))
+                        }) {
                         Text(text = "SAVE")
                     }
                     Spacer(modifier = Modifier.padding(start = pad))
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                        onClick = { /*TODO*/ }) {
+                        onClick = {
+                            subscriberViewModel.clearAllOrDelete()
+                        }) {
                         Text(text = "CLEAR ALL")
                     }
                 }
@@ -98,5 +115,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    private fun displaySubscribersList(){
+        subscriberViewModel.subscribers.observe(this, Observer {
+            Log.i("Main", it.toString())
+        })
     }
 }
