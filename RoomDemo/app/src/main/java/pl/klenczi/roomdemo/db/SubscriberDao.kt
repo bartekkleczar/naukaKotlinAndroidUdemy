@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SubscriberDao {
@@ -23,5 +24,5 @@ interface SubscriberDao {
     suspend fun deleteAll()
 
     @Query("SELECT * FROM subscriber_data_table")
-    fun getAllSubscribers(): LiveData<List<Subscriber>>
+    fun getAllSubscribers(): Flow<List<Subscriber>>
 }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -52,7 +54,6 @@ class MainActivity : ComponentActivity() {
             val repository = SubscriberRepository(dao)
             val factory = SubscriberViewModelFactory(repository)
             subscriberViewModel = ViewModelProvider(this, factory)[SubscriberViewModel::class.java]
-            displaySubscribersList()
             var textStateName by remember { mutableStateOf("") }
             var textStateEmail by remember { mutableStateOf("") }
 
@@ -98,17 +99,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 Spacer(modifier = Modifier.padding(top = pad))
+                val subscribersList by subscriberViewModel.subscribers.collectAsState(initial = emptyList())
                 LazyColumn {
-                    itemsIndexed(
-                        listOf("", "")
-                    ) { index, item ->
+                    items(
+                        subscribersList
+                    ) { item ->
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(60.dp)
                                 .background(Color.DarkGray, shape = RoundedCornerShape(5.dp))
                         ) {
-                            Text(text = "$index: $item")
+                            Text(text = item.name)
                         }
                         Spacer(modifier = Modifier.padding(bottom = 20.dp))
                     }
@@ -116,9 +118,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun displaySubscribersList(){
-        subscriberViewModel.subscribers.observe(this, Observer {
-            Log.i("Main", it.toString())
-        })
-    }
-}
+ }
