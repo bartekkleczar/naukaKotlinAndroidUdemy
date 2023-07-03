@@ -10,6 +10,9 @@ import pl.klenczi.roomdemo.db.SubscriberRepository
 
 class SubscriberViewModel(private val repository: SubscriberRepository) : ViewModel() {
     val subscribers = repository.subscribers
+    var isUpdateOrDelete = false
+    private lateinit var subscriberToUpdateOrDelete: Subscriber
+
     val inputName = MutableLiveData<String>()
     val inputEmail = MutableLiveData<String>()
 
@@ -17,8 +20,8 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
     val clearAllButton = MutableLiveData<String>()
 
     init {
-        saveOrUpdateButton.value = "Save"
-        clearAllButton.value = "ClearAll"
+        saveOrUpdateButton.value = "SAVE"
+        clearAllButton.value = "CLEAR ALL"
     }
 
     fun saveOrUpdate() {

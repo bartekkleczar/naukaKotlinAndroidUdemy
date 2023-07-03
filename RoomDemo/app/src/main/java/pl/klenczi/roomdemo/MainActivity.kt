@@ -2,9 +2,12 @@ package pl.klenczi.roomdemo
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,13 +32,16 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import pl.klenczi.roomdemo.db.Subscriber
@@ -56,6 +62,42 @@ class MainActivity : ComponentActivity() {
             subscriberViewModel = ViewModelProvider(this, factory)[SubscriberViewModel::class.java]
             var textStateName by remember { mutableStateOf("") }
             var textStateEmail by remember { mutableStateOf("") }
+            var textStateId by remember { mutableStateOf(0) }
+
+            var textStateSave by remember {
+                mutableStateOf(subscriberViewModel.saveOrUpdateButton.value)
+            }
+            var textStateClearall by remember {
+                mutableStateOf(subscriberViewModel.clearAllButton.value)
+            }
+
+            var clickedSubscriber = Subscriber(textStateId, textStateName, textStateEmail)
+
+            fun itemClicked(subscriber: Subscriber) {
+                Toast.makeText(
+                    this,
+                    "Selected subscriber is ${subscriber.name}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                subscriberViewModel.isUpdateOrDelete = !subscriberViewModel.isUpdateOrDelete
+                when (subscriberViewModel.isUpdateOrDelete) {
+                    true -> {
+                        textStateSave = "UPDATE"
+                        textStateClearall = "DELETE"
+                        textStateName = subscriber.name
+                        textStateEmail = subscriber.email
+                        textStateId = subscriber.id
+                    }
+
+                    else -> {
+                        textStateSave = subscriberViewModel.saveOrUpdateButton.value
+                        textStateClearall = subscriberViewModel.clearAllButton.value
+                        textStateName = ""
+                        textStateEmail = ""
+                        textStateId = 0
+                    }
+                }
+            }
 
             Column(
                 modifier = Modifier
@@ -83,19 +125,43 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                        modifier = Modifier.background(Color.Transparent, shape = RoundedCornerShape(5.dp)),
+                        modifier = Modifier.background(
+                            Color.Transparent,
+                            shape = RoundedCornerShape(5.dp)
+                        ),
                         onClick = {
-                            subscriberViewModel.insert(Subscriber(0, textStateName, textStateEmail))
+                            when (subscriberViewModel.isUpdateOrDelete) {
+                                false -> {
+                                    subscriberViewModel.insert(clickedSubscriber)
+                                }
+
+                                else -> {
+                                    subscriberViewModel.update(clickedSubscriber)
+                                }
+                            }
+                            subscriberViewModel.isUpdateOrDelete = false
+                            textStateName = ""; textStateEmail = ""; textStateId = 0
+                            Log.i("Main", "$clickedSubscriber")
                         }) {
-                        Text(text = "SAVE")
+                        Text(text = textStateSave ?: "SAVE")
                     }
                     Spacer(modifier = Modifier.padding(start = pad))
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
                         onClick = {
-                            subscriberViewModel.clearAllOrDelete()
+                            when (subscriberViewModel.isUpdateOrDelete) {
+                                false -> {
+                                    subscriberViewModel.clearAllOrDelete()
+                                }
+
+                                else -> {
+                                    subscriberViewModel.delete(clickedSubscriber)
+                                }
+                            }
+                            subscriberViewModel.isUpdateOrDelete = false
+                            Log.i("Main", "$clickedSubscriber")
                         }) {
-                        Text(text = "CLEAR ALL")
+                        Text(text = textStateClearall ?: "CLEAR ALL")
                     }
                 }
                 Spacer(modifier = Modifier.padding(top = pad))
@@ -108,9 +174,32 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(60.dp)
-                                .background(Color.DarkGray, shape = RoundedCornerShape(5.dp))
+                                .background(Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                                .clickable {
+                                    clickedSubscriber = item; itemClicked(item); Log.i(
+                                    "Main",
+                                    "$clickedSubscriber"
+                                )
+                                }
                         ) {
-                            Text(text = item.name)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = item.name,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = item.email,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.padding(bottom = 20.dp))
                     }
@@ -118,4 +207,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
- }
+}
