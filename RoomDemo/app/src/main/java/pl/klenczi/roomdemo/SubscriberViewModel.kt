@@ -45,36 +45,52 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
 
     fun insert(subscriber: Subscriber) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.insert(subscriber)
-            withContext(Dispatchers.Main){
-                statusMessage.value = Event("Subscriber Inserted Successfully")
+            val newRowId = repository.insert(subscriber)
+            withContext(Dispatchers.Main) {
+                if (newRowId > -1) {
+                    statusMessage.value = Event("Subscriber Inserted Successfully $newRowId")
+                }else {
+                    statusMessage.value = Event("Error Occurred")
+                }
             }
         }
     }
 
     fun update(subscriber: Subscriber) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.update(subscriber)
-            withContext(Dispatchers.Main){
-                statusMessage.value = Event("Subscriber Updated Successfully")
+            val numberOfRows = repository.update(subscriber)
+            withContext(Dispatchers.Main) {
+                if (numberOfRows > -1) {
+                    statusMessage.value = Event("$numberOfRows Rows Updated Successfully")
+                }else {
+                    statusMessage.value = Event("Error Occurred")
+                }
             }
         }
     }
 
     fun delete(subscriber: Subscriber) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.delete(subscriber)
-            withContext(Dispatchers.Main){
-                statusMessage.value = Event("Subscriber Deleted Successfully")
+            val numberOfDeletes = repository.delete(subscriber)
+            withContext(Dispatchers.Main) {
+                if (numberOfDeletes > -1) {
+                    statusMessage.value = Event("$numberOfDeletes Rows Deleted Successfully")
+                }else {
+                    statusMessage.value = Event("Error Occurred")
+                }
             }
         }
     }
 
     fun clearAll() {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteAll()
-            withContext(Dispatchers.Main){
-                statusMessage.value = Event("All Subscribers Deleted Successfully")
+            val numberOfDeletes = repository.deleteAll()
+            withContext(Dispatchers.Main) {
+                if (numberOfDeletes > -1) {
+                    statusMessage.value = Event("$numberOfDeletes Rows Deleted Successfully")
+                }else {
+                statusMessage.value = Event("Error Occurred")
+            }
             }
         }
     }
