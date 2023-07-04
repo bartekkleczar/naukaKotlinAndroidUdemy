@@ -52,6 +52,7 @@ import pl.klenczi.roomdemo.ui.theme.RoomDemoTheme
 
 class MainActivity : ComponentActivity() {
     private lateinit var subscriberViewModel: SubscriberViewModel
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,10 +61,16 @@ class MainActivity : ComponentActivity() {
             val repository = SubscriberRepository(dao)
             val factory = SubscriberViewModelFactory(repository)
             subscriberViewModel = ViewModelProvider(this, factory)[SubscriberViewModel::class.java]
-            var textStateName by remember { mutableStateOf("") }
-            var textStateEmail by remember { mutableStateOf("") }
-            var textStateId by remember { mutableStateOf(0) }
 
+            var textStateName by remember {
+                mutableStateOf("")
+            }
+            var textStateEmail by remember {
+                mutableStateOf("")
+            }
+            var textStateId by remember {
+                mutableStateOf(0)
+            }
             var textStateSave by remember {
                 mutableStateOf(subscriberViewModel.saveOrUpdateButton.value)
             }
@@ -98,6 +105,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
+            subscriberViewModel.message.observe(this, Observer {
+                it.getContentIfNotHandled()?.let {
+                    Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                }
+            })
 
             Column(
                 modifier = Modifier
