@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.work.Constraints
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import kotlinx.coroutines.channels.awaitClose
@@ -72,7 +74,13 @@ class MainActivity : ComponentActivity() {
 
     private suspend fun setOneTimeWorkRequest() {
         val workManager = WorkManager.getInstance(applicationContext)
+        val constraints = Constraints.Builder()
+            //.setRequiresCharging(true)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
         val uploadWorkRequest = OneTimeWorkRequest.Builder(UploadWorker::class.java)
+            .setConstraints(constraints)
             .build()
         workManager.enqueue(uploadWorkRequest)
         workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).asFlow()
@@ -85,7 +93,7 @@ class MainActivity : ComponentActivity() {
 
 fun <T> LiveData<T>.asFlow(): Flow<T> = channelFlow {
     val observer = Observer<T> { value ->
-        trySend(value).isSuccess // Wysyłanie wartości ze "live data" do kanału Flow
+        trySend(value).isSuccess
     }
     observeForever(observer)
 
