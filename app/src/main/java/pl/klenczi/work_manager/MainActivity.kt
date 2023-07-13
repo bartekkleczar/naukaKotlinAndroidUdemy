@@ -2,51 +2,43 @@ package pl.klenczi.work_manager
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
-import pl.klenczi.work_manager.ui.theme.WorkmanagerTheme
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val KEY_COUNT_VALUE = "key_count"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val textStateFlow = MutableStateFlow("")
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -74,6 +66,9 @@ class MainActivity : ComponentActivity() {
 
     private suspend fun setOneTimeWorkRequest() {
         val workManager = WorkManager.getInstance(applicationContext)
+        val data: Data = Data.Builder()
+            .putInt(KEY_COUNT_VALUE, 125)
+            .build()
         val constraints = Constraints.Builder()
             //.setRequiresCharging(true)
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -81,11 +76,17 @@ class MainActivity : ComponentActivity() {
 
         val uploadWorkRequest = OneTimeWorkRequest.Builder(UploadWorker::class.java)
             .setConstraints(constraints)
+            .setInputData(data)
             .build()
         workManager.enqueue(uploadWorkRequest)
         workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).asFlow()
-            .collect{ value ->
-                Log.i("Main", value.state.name)
+            .collect {
+                Log.i("Main", it.state.name)
+                if (it.state.isFinished) {
+                    val dataFromWorker = it.outputData
+                    val message = dataFromWorker.getString(UploadWorker.KEY_WORKER)
+                    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                }
             }
     }
 }
