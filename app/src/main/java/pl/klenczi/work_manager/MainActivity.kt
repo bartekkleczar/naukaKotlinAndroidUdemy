@@ -78,7 +78,16 @@ class MainActivity : ComponentActivity() {
             .setConstraints(constraints)
             .setInputData(data)
             .build()
-        workManager.enqueue(uploadWorkRequest)
+        val filteringRequest = OneTimeWorkRequest.Builder(FilteringWorker::class.java).build()
+        val compressingRequest = OneTimeWorkRequest.Builder(CompressingWorker::class.java).build()
+        val downloadingWorker = OneTimeWorkRequest.Builder(DownloadingWorker::class.java).build()
+
+        val parallelWorks = mutableListOf<OneTimeWorkRequest>(downloadingWorker, filteringRequest)
+        workManager
+            .beginWith(parallelWorks)
+            .then(compressingRequest)
+            .then(uploadWorkRequest)
+            .enqueue()
         workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).asFlow()
             .collect {
                 Log.i("Main", it.state.name)
