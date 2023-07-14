@@ -24,11 +24,14 @@ import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -50,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         .height(100.dp),
                     onClick = {
                         lifecycleScope.launch {
-                            setOneTimeWorkRequest()
+                            setPeriodicWorkRequest()
                         }
                     }
                 ) {
@@ -98,10 +101,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
     }
+    private fun setPeriodicWorkRequest() {
+        val periodicWorkRequest = PeriodicWorkRequest.Builder(
+            DownloadingWorker::class.java,
+            repeatInterval = 16,
+            TimeUnit.MINUTES
+        ).build()
+        WorkManager.getInstance(applicationContext).enqueue(periodicWorkRequest)
+    }
 }
 
-
-fun <T> LiveData<T>.asFlow(): Flow<T> = channelFlow {
+private fun <T> LiveData<T>.asFlow(): Flow<T> = channelFlow {
     val observer = Observer<T> { value ->
         trySend(value).isSuccess
     }
